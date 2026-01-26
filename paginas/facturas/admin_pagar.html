@@ -1,0 +1,55 @@
+
+<div style="height:1px;  clear:both;;"></div><article class="module width_full">
+	<header>
+	<h3 class="tabs_involved">Lista de Facturas por pagar de <?php  //print_r($facturas);
+
+    
+    if(isset($proveedor[0]['nombre']))echo $proveedor[0]['nombre'];else echo "Todos los proveedores";?></h3></header><div style="height:1px;  clear:both;;"></div>
+    <div class="tab_container">
+    	<div id="agregar" class="tab_content" style="width:100%">
+    		<form action="admin/facturas/pagado/" method="post" name="myform" id="myform"><table align="right" style=" margin-right:50px;  width:80%"><tr><td style="width:620px; height:200px;" rowspan="5"><div style="width:550px; height:200px; overflow:scroll"><?php foreach($facturas as $Cve => $Datos){ echo "<b>Factura #:</b>".$Datos['numero']." <b>del</b> ".$Datos['fecha1']." ".substr(strtolower($Datos['descripcion']),0,60)."...<br />";}?></div></td><td><?php  if(isset($proveedor[0]['nombre'])){echo $proveedor[0]['nombre']?><input name="proveedor" type="hidden" value="<?php echo $proveedor[0]['id'];?>" /><?php }?>
+					<input type="text" name="fecha1" id="fecha1" class="required" placeholder="Fecha Inicio"/></td></tr>
+                    <tr><td valign="top"><input type="text" name="fecha2" id="fecha2" class="required" placeholder="Fecha Fin"/></td></tr>
+					<tr><td valign="top"><label for="fecha2">Fecha en que se pago:</label><br/></td></tr>
+					<tr><td valign="top"><input type="text" name="fecha3" id="fecha3" class="required" placeholder="Fecha pago"/></td></tr></table>
+					
+				<div style="height:1px;  clear:both;;"></div>
+				<footer>
+					<div class="submit_link">
+						<input type="submit" value="Pagar" id="btnSubmit" />
+					</div>
+				</footer><div style="height:1px;  clear:both;;"></div>
+			</form>
+         </div>
+	</div><!-- end of .tab_container -->
+</article><!-- end of content manager article -->
+<script type="text/javascript">
+
+
+$(function() {
+		$( "#fecha1" ).datepicker({
+			defaultDate: "+1w",
+			changeMonth: true,
+			numberOfMonths: 3,dateFormat: 'yy-mm-dd',
+			onClose: function( selectedDate ) {
+				$( "#to" ).datepicker( "option", "minDate", selectedDate );
+			}
+		});
+		$( "#fecha2" ).datepicker({
+			defaultDate: "+1w",
+			changeMonth: true,
+			numberOfMonths: 3,dateFormat: 'yy-mm-dd',
+			onClose: function( selectedDate ) {
+				$( "#from" ).datepicker( "option", "maxDate", selectedDate );
+			}
+		});$( "#fecha3" ).datepicker({
+			defaultDate: "+1w",
+			changeMonth: true,
+			numberOfMonths: 3,dateFormat: 'yy-mm-dd',
+			onClose: function( selectedDate ) {
+				$( "#from" ).datepicker( "option", "maxDate", selectedDate );
+			}
+		});
+	});
+
+</script>

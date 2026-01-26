@@ -1,0 +1,212 @@
+<?php 
+    require('fpdf.php'); // Require the FPDF library
+    class PDF extends FPDF
+{
+function SubHeader()
+{
+    // Logo
+    $this->SetY($this->GetY());
+    $this->Cell(180,36,'',1,0);
+    // ¡IMPORTANTE! Vuelve a usar tu ruta de imagen local.
+    // FPDF no carga imágenes desde URLs HTTP/HTTPS directamente.
+    // Asegúrate de que 'logo-huetamo.png' exista en la misma carpeta que este script
+    // o proporciona la ruta completa/correcta a tu archivo de imagen.
+    $this->Image('logo-huetamo.png',15,$this->GetY()+3,33);
+    // Arial bold 15
+    $this->SetFont('Arial','',8);
+    
+      $this->SetY($this->GetY());
+    // Movernos a la derecha (Move to the right)
+    $this->Cell(40);
+    // Título (Title)
+    
+    $this->SetFillColor(200,220,255);
+    $this->Cell(100,6,'MUNICIPIO DE HUETAMO MICHOACAN',0,0,'C',true);
+      
+    $this->Cell(40,12,'FECHA:     '.date("Y/m/d"),1,0,'C');
+    
+    $this->Ln();
+      $this->SetY($this->GetY()-6);
+      
+    $this->Cell(40,6,'',0,0,'C',false);
+    $this->Cell(100,6,'RFC: MHM8501016A8',0,0,'C',false);
+    $this->SetY($this->GetY()+6);
+    $this->Cell(140,6,'',0,0,'C',false);
+    $this->Cell(40,18,'FOLIO:                 ',1,0,'C');
+    $this->Ln();
+    
+      $this->SetY($this->GetY()-18);
+    $this->Cell(40,6,'',0,0,'C',false);
+    $this->Cell(99,6,'AV. Madero Nte S/N',0,0,'C',false);
+      $this->Ln();
+    
+    $this->Cell(40,6,'',0,0,'C',false);
+    $this->Cell(99,6,'Col Centro Cp: 61940',0,0,'C',false);
+    $this->Ln();
+    $this->Cell(40,6,'',0,0,'C',false);
+    $this->Cell(99,6,'Huetamo Mich. Telefono: (435)5-56-02-92',0,0,'C',false);
+      $this->Ln();
+    $this->Cell(40,6,'',0,0,'C',false);
+    
+    $this->Cell(100,6,'CONTRA RECIBO PARA PROVEEDORES',0,0,'C',true);
+    // Salto de línea (Line break)
+    $this->Ln();
+}
+
+}
+$pdf = new PDF();
+
+$pdf->AliasNbPages();
+$pdf->AddPage();
+$pdf->SubHeader();
+/////////////////
+    $pdf->SetFont('Arial','',6);
+  $a=0;$sedebe=0;
+  if(is_array($Contrarecibos))
+  foreach($Contrarecibos as $row=>$dat)
+    {
+    if($a==0){
+    $pdf->Cell(40,6,'RECIBIMOS DE',1,0,'C',false);
+
+    // Replaced utf8_decode() with mb_convert_encoding() for PHP 8.2+ compatibility
+    $pdf->Cell(140,6,mb_convert_encoding($dat['nombre'], 'ISO-8859-1', 'UTF-8'),1,0,'L',false);
+    
+      
+      $pdf->SetY($pdf->GetY()-19);
+      $pdf->Cell(165);
+      
+    $pdf->SetFont('Arial','',12);
+    $pdf->Cell(20,10,$dat['folio'],0,0,'L',false);
+    
+    $pdf->SetFont('Arial','',6);
+        $pdf->SetY( $pdf->GetY()+15);
+        $pdf->Ln();
+    $pdf->Cell(180,6,"LOS SIGUIENTES DOCUMENTOS ORIGINALES A REVISION, Y DE SER PROCEDENTES REALIZAREMOS EL PAGO",1,0,'C',false);
+        $pdf->Ln();
+    $pdf->Cell(10,4,'#',1,0,'C',false);
+    
+    $pdf->Cell(20,4,'# DOCUMENTO',1,0,'C',false);
+    $pdf->Cell(20,4,'FECHA',1,0,'C',false);
+    
+    $pdf->Cell(20,4,'IMPORTE',1,0,'C',false);
+    
+    $pdf->Cell(20,4,'PAGADO',1,0,'C',false); 
+    $pdf->Cell(90,4,'OBSERVACIONES',1,0,'C',false);
+    } $pdf->Ln();   $a++;
+      $pdf->Cell(10,4,$a,1,0,'C',false);
+    
+    $pdf->Cell(20,4,$dat['numero'],1,0,'C',false);
+    $pdf->Cell(20,4,$dat['fecha1'],1,0,'C',false);
+    
+    $pdf->Cell(20,4,"$ ".number_format($dat['cantidad'],2),1,0,'C',false);
+    $sedebe+=$dat['cantidad']-$dat['suma'];
+    $pdf->Cell(20,4,"$ ".number_format($dat['suma'],2),1,0,'C',false); 
+    
+    // Replaced utf8_decode() with mb_convert_encoding() for PHP 8.2+ compatibility
+    $pdf->Cell(90,4,mb_convert_encoding($dat['descripcion'], 'ISO-8859-1', 'UTF-8'),1,0,'C',false);
+  
+    }
+    $pdf->Ln();
+    $pdf->Cell(70,10,"TOTAL",1,0,'C',false);
+    $pdf->SetX(60);
+    $pdf->Cell(20,6,"$ ".number_format($sedebe,2),0,0,'C',true);
+  
+    $pdf->Cell(50,35,"",1,1,'C',false);
+    $pdf->SetY($pdf->GetY()-35);
+      $pdf->SetX(80);
+    $pdf->Cell(50,10,"SELLO",0,0,'C',false);
+        $pdf->Cell(60,10,"FECHA DE PAGO:",1,0,'C',false);
+          $pdf->Ln();
+          $pdf->Cell(70,25,"",1,1,'C',false);
+          $pdf->SetY($pdf->GetY()-25);
+          $pdf->SetX(130);
+          
+          $pdf->Cell(60,25,"",1,1,'C',false);
+          
+          $pdf->SetY($pdf->GetY()-25);
+      
+    $pdf->Cell(70,10,"TESORERIA MUNICIPAL",0,0,'C',false);
+    $pdf->Ln(16);
+    $pdf->Cell(70,10,"NOMBRE Y FIRMA",0,0,'C',false);
+    $pdf->Cell(50,10,"",0,0,'C',false);
+    $pdf->Cell(70,10,"**COPIA PROVEEDOR**",0,0,'C',false);
+    ////////////
+    $pdf->Ln(12);
+    if($a<10)$pdf->SetY(150);
+    if($a>10)$pdf->AddPage();
+$pdf->SubHeader();
+
+/////////////////
+    $pdf->SetFont('Arial','',6);
+  $a=0;$sedebe=0;
+  if(is_array($Contrarecibos))
+  foreach($Contrarecibos as $row=>$dat)
+    {
+    if($a==0){
+    $pdf->Cell(40,6,'RECIBIMOS DE',1,0,'C',false);
+
+    // Replaced utf8_decode() with mb_convert_encoding() for PHP 8.2+ compatibility
+    $pdf->Cell(140,6,mb_convert_encoding($dat['nombre'], 'ISO-8859-1', 'UTF-8'),1,0,'L',false);
+    
+      
+      $pdf->SetY($pdf->GetY()-19);
+      $pdf->Cell(165);
+      
+    $pdf->SetFont('Arial','',12);
+    $pdf->Cell(20,10,$dat['folio'],0,0,'L',false);
+    
+    $pdf->SetFont('Arial','',6);
+        $pdf->SetY( $pdf->GetY()+15);
+        $pdf->Ln();
+    $pdf->Cell(180,6,"LOS SIGUIENTES DOCUMENTOS ORIGINALES A REVISION, Y DE SER PROCEDENTES REALIZAREMOS EL PAGO",1,0,'C',false);
+        $pdf->Ln();
+    $pdf->Cell(10,4,'#',1,0,'C',false);
+    
+    $pdf->Cell(20,4,'# DOCUMENTO',1,0,'C',false);
+    $pdf->Cell(20,4,'FECHA',1,0,'C',false);
+    
+    $pdf->Cell(20,4,'IMPORTE',1,0,'C',false);
+    
+    $pdf->Cell(20,4,'PAGADO',1,0,'C',false); 
+    $pdf->Cell(90,4,'OBSERVACIONES',1,0,'C',false);
+    } $pdf->Ln();   $a++;
+      $pdf->Cell(10,4,$a,1,0,'C',false);
+    
+    $pdf->Cell(20,4,$dat['numero'],1,0,'C',false);
+    $pdf->Cell(20,4,$dat['fecha1'],1,0,'C',false);
+    
+    $pdf->Cell(20,4,"$ ".number_format($dat['cantidad'],2),1,0,'C',false);
+    $sedebe+=$dat['cantidad']-$dat['suma'];
+    $pdf->Cell(20,4,"$ ".number_format($dat['suma'],2),1,0,'C',false); 
+    
+    // Replaced utf8_decode() with mb_convert_encoding() for PHP 8.2+ compatibility
+    $pdf->Cell(90,4,mb_convert_encoding($dat['descripcion'], 'ISO-8859-1', 'UTF-8'),1,0,'C',false);
+  
+    }
+    $pdf->Ln();
+    $pdf->Cell(70,10,"TOTAL",1,0,'C',false);
+    $pdf->SetX(60);
+    $pdf->Cell(20,6,"$ ".number_format($sedebe,2),0,0,'C',true);
+  
+    $pdf->Cell(50,35,"",1,1,'C',false);
+    $pdf->SetY($pdf->GetY()-35);
+      $pdf->SetX(80);
+    $pdf->Cell(50,10,"SELLO",0,0,'C',false);
+        $pdf->Cell(60,10,"FECHA DE PAGO:",1,0,'C',false);
+          $pdf->Ln();
+          $pdf->Cell(70,25,"",1,1,'C',false);
+          $pdf->SetY($pdf->GetY()-25);
+          $pdf->SetX(130);
+          
+          $pdf->Cell(60,25,"",1,1,'C',false);
+          
+          $pdf->SetY($pdf->GetY()-25);
+      
+    $pdf->Cell(70,10,"TESORERIA MUNICIPAL",0,0,'C',false);
+    $pdf->Ln(16);
+    $pdf->Cell(70,10,"NOMBRE Y FIRMA",0,0,'C',false);
+    $pdf->Cell(50,10,"",0,0,'C',false);
+    $pdf->Cell(70,10,"**COPIA TESOREREIA**",0,0,'C',false);
+    ////////////
+   $pdf->Output();
+?>

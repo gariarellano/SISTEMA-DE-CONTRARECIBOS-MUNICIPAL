@@ -1,0 +1,342 @@
+<?php
+// Activar el modo estricto de tipos para PHP 8.4
+declare(strict_types=1);
+
+// Inicialización segura de variables para evitar errores de "Undefined array key" o "Undefined variable"
+// Se asume que $Busqueda puede venir de $_POST, si no, se inicializa como un array vacío.
+$Busqueda = $_POST['Busqueda'] ?? [];
+$ch = 0;
+$value = '';
+
+// Asegura que las variables existan para evitar errores de "Undefined variable"
+$Maximo = $Maximo ?? ['total' => 0, 'rows' => 1];
+$Contrarecibos = $Contrarecibos ?? [];
+$Facturas = $Facturas ?? [];
+$Proveedores = $Proveedores ?? [];
+
+// Lógica para determinar el campo de búsqueda y su valor
+if (isset($Busqueda['like']['a.id'][0]) && $Busqueda['like']['a.id'][0] !== '') {
+    $ch = 1;
+    $value = $Busqueda['like']['a.id'][0];
+} elseif (isset($Busqueda['like']['b.nombre'][0]) && $Busqueda['like']['b.nombre'][0] !== '') {
+    $ch = 2;
+    $value = $Busqueda['like']['b.nombre'][0];
+} elseif (isset($Busqueda['like']['c.numero'][0]) && $Busqueda['like']['c.numero'][0] !== '') {
+    $ch = 3;
+    $value = $Busqueda['like']['c.numero'][0];
+}
+
+// Placeholder para $this->Html si no está definido en el entorno.
+// Esto es para evitar un Fatal Error si el framework no lo provee.
+// En un entorno de framework real (como CakePHP), $this->Html ya estaría disponible.
+if (!isset($this->Html)) {
+    $this->Html = new class {
+        public function Link(string $href, string $content, array $attributes = []): string {
+            $attr_str = '';
+            foreach ($attributes as $key => $val) {
+                if (is_array($val)) { // Manejo de arrays en atributos (ej. style)
+                    $style_str = '';
+                    foreach ($val as $style_key => $style_val) {
+                        $style_str .= htmlspecialchars($style_key) . ':' . htmlspecialchars($style_val) . ';';
+                    }
+                    $attr_str .= ' ' . htmlspecialchars($key) . '="' . $style_str . '"';
+                } elseif ($key === 'prefijo') {
+                    // Ignorar este atributo ya que es específico de un framework
+                } else {
+                    $attr_str .= ' ' . htmlspecialchars($key) . '="' . htmlspecialchars((string)$val) . '"';
+                }
+            }
+            return '<a href="' . htmlspecialchars($href) . '"' . $attr_str . '>' . $content . '</a>';
+        }
+        public function img(string $src, array $attributes = []): string {
+            $attr_str = '';
+            foreach ($attributes as $key => $val) {
+                $attr_str .= ' ' . htmlspecialchars($key) . '="' . htmlspecialchars((string)$val) . '"';
+            }
+            return '<img src="' . htmlspecialchars($src) . '"' . $attr_str . '>';
+        }
+    };
+}
+?>
+
+<form action="admin/contrarecibos/" method="post">
+    <table align="right" style="margin-right:50px">
+        <tr>
+            <td><label for="busqueda">Buscar:</label></td>
+            <td>
+                <input type="hidden" name="action" id="action" value="buscar" />
+                <input type="text" name="buscar" id="buscar" class="required" placeholder="Búsqueda" value="<?php echo htmlspecialchars($value); ?>" />
+            </td>
+            <td>
+                <label>
+                    <input name="campo" type="radio" id="campo_0" value="1" <?php if ($ch === 1 || $ch === 0) { ?>checked="checked" <?php } ?> />
+                    Id
+                </label>
+            </td>
+            <td>
+                <label>
+                    <input type="radio" name="campo" value="2" id="campo_1" <?php if ($ch === 2) { ?>checked="checked" <?php } ?> />
+                    Proveedor
+                </label>
+            </td>
+            <td>
+                <label>
+                    <input type="radio" name="campo" value="3" id="campo_3" <?php if ($ch === 3) { ?>checked="checked" <?php } ?> />
+                    Factura
+                </label>
+            </td>
+            <td>
+                <input type="submit" value="Buscar" id="btnSubmit" />
+            </td>
+        </tr>
+    </table>
+</form>
+
+<div style="height:1px; clear:both;"></div>
+
+<article class="module width_full">
+    <header>
+        <h3 class="tabs_involved">Lista de Contrarecibos</h3>
+        <ul class="tabs">
+            <li class="active"><a href="#listado">Listado</a></li>
+            <li><a href="#agregar">Agregar</a></li>
+        </ul>
+    </header>
+    <div class="tab_container">
+
+        <div id="listado" class="tab_content">
+            <table class="tablesorter" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Proveedor</th>
+                        <th>Facturas</th>
+                        <th>Fecha</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $a = 1;
+                    $b = 1;
+                    foreach ($Contrarecibos as $dato) :
+                    ?>
+                        <tr class="p<?php echo isset($Maximo) ? $a : 1;
+                                        if (($Maximo['rows'] ?? 1) === $b) { // Asegura que 'rows' exista y no sea 0
+                                            $a++;
+                                            $b = 0;
+                                        }
+                                        $b++; ?>">
+                            <td style="vertical-align:top"><?php echo htmlspecialchars($dato['id'] ?? ''); ?></td>
+                            <td style="vertical-align:top"><?php echo htmlspecialchars($dato['nombre'] ?? ''); ?></td>
+                            <td>
+                                <?php foreach ($Facturas as $datos) :
+                                    // Asegura que las claves existan antes de comparar
+                                    $proveedor_dato = $dato['proveedor'] ?? null;
+                                    $id_dato = $dato['id'] ?? null;
+                                    $proveedor_datos = $datos['proveedor'] ?? null;
+                                    $contrarecibo_datos = $datos['contrarecibo'] ?? null;
+
+                                    if (($proveedor_datos === $proveedor_dato && $contrarecibo_datos === $id_dato) || ($proveedor_datos === $proveedor_dato && ($contrarecibo_datos === 0 || $contrarecibo_datos === null))) {
+                                        echo "# " . htmlspecialchars($datos['numero'] ?? '') . " El :" . htmlspecialchars($datos['fecha1'] ?? '') . " $" . htmlspecialchars(number_format((float)($datos['cantidad'] ?? 0), 2)) . "<br />";
+                                    }
+                                endforeach; ?>
+                            </td>
+                            <td style="vertical-align:top"><?php echo htmlspecialchars($dato['fecha'] ?? ''); ?></td>
+                            <td>
+                                <table style="border-color:transparent; border-collapse:inherit">
+                                    <tr>
+                                        <td style="border-bottom:none; padding:0px"><?php
+                                            echo $this->Html->Link("javascript:;", $this->Html->img("../images/icn_edit.png", ["title" => "Editar Enlace"]), ["id" => "btnEditar", "style" => "margin:0px 5px;", "prefijo" => false, "idcontrarecibo" => htmlspecialchars($dato['id'] ?? ''), "nombre" => htmlspecialchars($dato['nombre'] ?? ''), "idproveedor" => htmlspecialchars($dato['idproveedor'] ?? '')]);
+                                            ?></td>
+                                        <td style="border-bottom:none; padding:0px"><?php
+                                            echo $this->Html->Link("contrarecibos/borrar/" . htmlspecialchars($dato['id'] ?? ''), $this->Html->img("../images/icn_trash.png", ["title" => "Eliminar Contrarecibos"]), ["class" => "Eliminar"]);
+                                            ?></td>
+                                        <td style="border-bottom:none; padding:0px">
+                                            <form action="admin/contrarecibos/buscar" method="post">
+                                                <input type="hidden" name="b" id="b" value="<?php echo htmlspecialchars($dato['id'] ?? ''); ?>" />
+                                                <input type="submit" value="pdf" name="btnSubmit2" id="btnSubmit2" style="border:none; background-image:url(plantillas/admin/images/pdficon.jpg); color:transparent; background-repeat:no-repeat; background-color:transparent; width:19px; height:19px" />
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <footer style="text-align:right;">
+                <p style="margin-right:25px;">Página <span id="page">1</span> de <?php
+                                                                                    $total_pages_footer = 1;
+                                                                                    if (isset($Maximo) && is_array($Maximo) && isset($Maximo['total']) && isset($Maximo['rows']) && $Maximo['rows'] > 0) {
+                                                                                        $total_pages_footer = (int)ceil($Maximo['total'] / $Maximo['rows']);
+                                                                                    }
+                                                                                    echo $total_pages_footer;
+                                                                                    echo $this->Html->img("../images/flechaIzq.png", ["title" => "Página Anterior", "style" => "width:10px;cursor:pointer", "id" => "ant"]);
+                                                                                    echo "&nbsp;";
+                                                                                    echo $this->Html->img("../images/flechaDer.png", ["title" => "Página Siguiente", "style" => "width:10px;cursor:pointer", "id" => "next"]);
+                                                                                    ?></p>
+            </footer>
+        </div>
+        <div id="agregar" class="tab_content">
+            <form id="ProcesarEstado" method="POST" action="admin/contrarecibos/agregar/">
+                <fieldset>
+                    <input type="hidden" name="action" id="action" value="agregar" />
+                    <input type="hidden" name="id" id="id" value="" />
+                    <label for="proveedor">Proveedor:</label><br />
+                    <select name="proveedor" id="proveedor" onchange="ObtFacturas(this.value);">
+                        <option value="0"> Seleccione un proveedor</option>
+                        <?php foreach ($Proveedores as $dat) : ?>
+                            <option value="<?php echo htmlspecialchars($dat['id'] ?? ''); ?>"><?php echo htmlspecialchars($dat['nombre'] ?? ''); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div id="facturas"></div>
+                </fieldset>
+                <footer>
+                    <div class="submit_link">
+                        <input type="submit" value="Guardar" id="btnSubmit" />
+                    </div>
+                </footer>
+            </form>
+        </div>
+    </div><!-- end of .tab_container -->
+</article><!-- end of content manager article -->
+
+<script type="text/javascript">
+    // Usamos $(document).ready para asegurar que el DOM esté completamente cargado
+    $(document).ready(function() {
+        var a = 2; // Variable para la paginación (página actual + 1)
+        var b = null; // Variable para la paginación (página anterior)
+
+        // Ocultar las páginas iniciales de la tabla al cargar la página
+        <?php
+        // Calcular el número total de páginas para usar en JavaScript
+        $total_pages_js = 1;
+        if (isset($Maximo) && is_array($Maximo) && isset($Maximo['total']) && isset($Maximo['rows']) && $Maximo['rows'] > 0) {
+            $total_pages_js = (int)ceil($Maximo['total'] / $Maximo['rows']);
+        }
+
+        // Generar el código jQuery para ocultar las páginas
+        for ($i = 2; $i <= $total_pages_js; $i++) {
+            echo "$(\".p{$i}\").hide();\n"; // \n para mejor formato en el JS generado
+        }
+        ?>
+
+        // Manejo del clic en el botón "Siguiente" para la paginación
+        // Se usa .on() para delegar eventos, compatible con elementos que se añaden dinámicamente
+        $(document).on("click", "img#next", function() {
+            if (a > 1) b = a - 1; // Si 'a' es mayor que 1, 'b' es la página anterior
+            // Asegurarse de que 'a' no exceda el número total de páginas
+            if (a <= <?php echo $total_pages_js; ?>) {
+                if (b >= 1) { // Si 'b' es una página válida, la oculta
+                    $('.p' + b).hide();
+                }
+                $('.p' + a).show(); // Muestra la página actual
+                $("span#page").html(a); // Actualiza el número de página en el HTML
+                if (a < <?php echo $total_pages_js; ?>) { // Si no es la última página, incrementa 'a'
+                    a++;
+                }
+            }
+        });
+
+        // Manejo del clic en el botón "Anterior" para la paginación
+        $(document).on("click", "img#ant", function() {
+            if (a > 1) { // Solo si 'a' es mayor que 1 (no estamos en la primera página)
+                b = a - 1; // 'b' es la página a la que queremos ir (anterior)
+                $('.p' + b).show(); // Muestra la página anterior
+                $("span#page").html(b); // Actualiza el número de página en el HTML
+                $('.p' + a).hide(); // Oculta la página actual
+                if (a > 2) { // Si no estamos en la segunda página, decrementa 'a'
+                    a--;
+                } else if (a === 2 && b === 1) { // Caso especial para volver de la página 2 a la 1
+                    a = 1; // Resetea 'a' a 1
+                }
+            }
+        });
+
+        // Manejo del clic en el botón "Editar"
+        $(document).on("click", "#btnEditar", function() {
+            $("input#action").val("editar"); // Cambia la acción del formulario a "editar"
+            var ids = $(this).attr("idproveedor"); // Obtiene el ID del proveedor del atributo
+            var idco = $(this).attr("idcontrarecibo"); // Obtiene el ID del contrarecibo del atributo
+            $("input#id").val(idco); // Establece el ID del contrarecibo en el campo oculto
+
+            // Mostrar un mensaje de carga mientras se obtienen las facturas
+            $("div#facturas").html("Cargando facturas...").show();
+
+            // Petición AJAX para obtener las facturas para edición
+            $.ajax({
+                url: "contrarecibos/buscarfacturas/" + ids + "/" + idco, // URL para la petición
+                type: "post", // Método de la petición
+                dataType: "json", // Tipo de datos esperado en la respuesta
+                success: function(Response) {
+                    $("div#facturas").html(""); // Limpia el contenido del div de facturas
+                    if (Response && Response.length > 0) { // Si hay respuesta y contiene datos
+                        $.each(Response, function(key, val) { // Itera sobre cada factura
+                            var check = ''; // Inicializa la variable 'check'
+                            // Lógica para marcar el checkbox si la factura ya está asociada o es nueva y pendiente
+                            if ((val.proveedor == ids && val.contrarecibo == idco && val.estatus == 1) || (val.proveedor == ids && val.contrarecibo == 0 && val.estatus == 1)) {
+                                if (val.contrarecibo == idco) {
+                                    check = 'checked="checked"'; // Marca si ya está en el contrarecibo
+                                }
+                                // Añade el checkbox y su etiqueta, formateando la cantidad a 2 decimales
+                                $("div#facturas").append("<label><input name='factura_" + val.id + "' type='checkbox' value='" + val.id + "' " + check + " id='factura_" + val.id + "'>" + val.numero + "--" + val.fecha1 + "--$" + parseFloat(val.cantidad).toFixed(2) + "</label><br />");
+                            }
+                        });
+                    } else {
+                        $("div#facturas").html("No se encontraron facturas para este proveedor o contrarecibo.");
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    // Manejo de errores en la petición AJAX (MUY IMPORTANTE para depuración)
+                    console.error("Error al buscar facturas (Editar):", textStatus, errorThrown);
+                    console.error("Respuesta del servidor (Editar):", jqXHR.responseText);
+                    $("div#facturas").html("Error al cargar las facturas para edición. Por favor, intente de nuevo.");
+                }
+            });
+
+            // Selecciona el proveedor en el dropdown y cambia la interfaz de usuario a la pestaña "Agregar/Editar"
+            $("select#proveedor option[value='" + $(this).attr("idproveedor") + "']").prop("selected", true);
+            $("ul.tabs li").removeClass("active");
+            $("ul.tabs").append('<li class="active"><a href="javascript:;">Editar</a></li>');
+            $(".tab_content").hide();
+            $("#agregar").fadeIn();
+        });
+
+        // Función para obtener facturas al cambiar el proveedor (usada en la pestaña "Agregar")
+        // Se define en el scope global (window.ObtFacturas) para que el atributo onchange del HTML pueda llamarla.
+        window.ObtFacturas = function(id) {
+            if (id === "0") { // Si se selecciona la opción "Seleccione un proveedor"
+                $("div#facturas").html(""); // Limpia el área de facturas
+                return; // Sale de la función
+            }
+
+            // Mostrar un mensaje de carga
+            $("div#facturas").html("Cargando facturas...").show();
+
+            // Petición AJAX para obtener facturas pendientes para el proveedor seleccionado
+            $.ajax({
+                url: "contrarecibos/buscarfacturas/" + id, // URL de la petición
+                type: "post", // Método de la petición
+                dataType: "json", // Tipo de datos esperado en la respuesta
+                success: function(Response) {
+                    $("div#facturas").html(""); // Limpia el contenido del div de facturas
+                    if (Response && Response.length > 0) { // Si hay respuesta y contiene datos
+                        $.each(Response, function(key, val) { // Itera sobre cada factura
+                            // Añade el checkbox y su etiqueta, formateando la cantidad
+                            $("div#facturas").append("<label><input name='factura_" + val.id + "' type='checkbox' value='" + val.id + "' id='factura_" + val.id + "'>" + val.numero + "--" + val.fecha1 + "--$" + parseFloat(val.cantidad).toFixed(2) + "</label><br />");
+                        });
+                    } else {
+                        $("div#facturas").html("No se encontraron facturas pendientes para este proveedor.");
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    // Manejo de errores en la petición AJAX
+                    console.error("Error al buscar facturas (Agregar):", textStatus, errorThrown);
+                    console.error("Respuesta del servidor (Agregar):", jqXHR.responseText);
+                    $("div#facturas").html("Error al cargar las facturas. Por favor, intente de nuevo.");
+                }
+            });
+        };
+    });
+</script>

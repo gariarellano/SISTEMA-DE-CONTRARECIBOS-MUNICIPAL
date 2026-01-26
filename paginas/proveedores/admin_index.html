@@ -1,0 +1,138 @@
+<form action="admin/proveedores/buscar/" method="post"><table align="right" style=" margin-right:50px"><tr><td><label for="busqueda">Buscar:</label></td><td>
+    
+				<input type="hidden" name="action" id="action" value="buscar" />
+					<input type="text" name="buscar" id="buscar" class="required" placeholder="Busqueda"/>
+          </td><td>
+                      <label>
+                        <input name="campo" type="radio" id="campo_0" value="1" checked="checked" />
+                        Nombre</label>
+                    </td><td>
+                      <label>
+                        <input type="radio" name="campo" value="2" id="campo_1" />
+                        RFC</label>
+                      </td><td>
+						<input type="submit" value="Buscar" id="btnSubmit" /></td></tr></table>
+      </p>
+    </form><div style="height:1px;  clear:both;;"></div><article class="module width_full">
+	<header>
+	<h3 class="tabs_involved">Lista de Proveedores</h3>
+	<ul class="tabs">
+		<li class="active"><a href="#listado">Listado</a></li>
+		<li><a href="#agregar">Agregar</a></li>
+	</ul>
+	</header>
+	<div class="tab_container">
+      
+  <div id="listado" class="tab_content">
+			<table class="tablesorter" cellspacing="0"> 
+				<thead> 
+					<tr>
+						<th>RFC</th> 
+						<th>Nombre</th>
+						<th>Teléfono</th>
+						<th></th>					
+					</tr> 
+				</thead> 
+				<tbody>
+				<?php $a=$b=1; foreach ($Proveedores as $cve => $dato): ?>
+					<tr class="p<?php echo  isset($Maximo)?$a:1; if($Maximo['rows']==$b){$a++;$b=0;}$b++;?>">
+						<td><?php echo $dato['rfc'];?></td> 
+						<td><?php echo $dato['nombre'];?></td>
+						<td><?php echo $dato['telefono'];?></td>
+						<td>
+							<table style="border-color:transparent; border-collapse:inherit"><tr><td  style="border-bottom:none; padding:0px"><?php 
+								echo $this->Html->Link("javascript:;",$this->Html->img("../images/icn_edit.png",array("title"=>"Editar Enlace")),array("id"=>"btnEditar","style"=>"margin:0px 5px;","prefijo"=>false,"rfc"=>$dato['rfc'],"nombre"=>$dato['nombre'],"domicilio"=>$dato['domicilio'],"telefono"=>$dato['telefono'],"email"=>$dato['email'],"idproveedor"=>$dato['id'], "fondo"=>$dato['fondo']));?></td><td   style="border-bottom:none; padding:0px"><?php
+								echo $this->Html->Link("proveedores/borrar/".$dato['id'],$this->Html->img("../images/icn_trash.png",array("title"=>"Eliminar Proveedor")),array("class"=>"Eliminar"));
+							?></td><td   style="border-bottom:none; padding:0px"><form action="admin/facturas/buscar/" method="post"><input name="proveedor" type="hidden" id="proveedor" value="<?php  echo $dato['id'];?>" />
+                            <input name="campo" type="hidden" id="campo_0" value="1"  />
+				<input type="hidden" name="action" id="action" value="buscar" />
+						<input type="submit" value="" id="btnSubmit"  style="border:none; background-image:url(plantillas/admin/images/icnfactura.png); background-repeat:no-repeat; background-color:transparent; width:16px; height:16px"/></form></td></tr></table>
+						</td> 
+					</tr> 
+				<?php endforeach;?>
+				</tbody> 
+			</table>
+			<footer style="text-align:right;">
+				<p style="margin-right:25px;">Pagina <span id="page">1</span> de <?php echo isset($Maximo) && $Maximo['total']>0?ceil($Maximo['total']/$Maximo['rows']):1; echo $this->Html->img("../images/flechaIzq.png",array("title"=>"Página Anterior","style"=>"width:10px;cursor:pointer","id"=>"ant"));echo "&nbsp;";  echo $this->Html->img("../images/flechaDer.png",array("title"=>"Página Siguiente","style"=>"width:10px;cursor:pointer","id"=>"next"));   ?></p>
+			</footer>
+		</div>
+		<div id="agregar" class="tab_content">
+			<form id="ProcesarEstado" method="POST" action="admin/proveedores/agregar/">
+				<input type="hidden" name="action" id="action" value="agregar" />
+				<input type="hidden" name="id" id="id" value="" />
+				<fieldset>
+					<label for="rfc" >RFC:</label><br/>
+					
+					<input type="text" name="rfc" id="rfc" class="required" placeholder="RFC"/><br/><br/>
+					<label for="Nombre">nombre:</label><br/>
+					<input type="text" name="nombre" id="nombre" class="required" placeholder="Nombre"/>
+					<label for="domicilio">Domicilio:</label><br/>
+					<input type="text" name="domicilio" id="domicilio" class="required" placeholder="Domicilio"/>
+                    
+					<label for="telefono">Teléfono:</label><br/>
+					<input type="text" name="telefono" id="telefono" class="required" placeholder="Teléfono"/>
+					<label for="email">Email:</label><br/>
+					<input type="text" name="email" id="email" class="required" placeholder="Email"/>
+					<label for="fondo">Tipo de fondo:</label><br/>
+                    <select name="fondo" id="fondo">                      
+                      <option value="1">Fondo III</option>
+                      <option value="2">Obra Convenida</option>
+                      <option value="3">Gasto Corriente</option>
+                      <option value="4">Aporte Federal</option>                      
+                      <option value="5">Otras Aportaciones</option>
+                    </select>
+				</fieldset>
+				<footer>
+					<div class="submit_link">
+						<input type="submit" value="Guardar" id="btnSubmit" />
+					</div>
+				</footer>
+			</form>
+		</div>
+	</div><!-- end of .tab_container -->
+</article><!-- end of content manager article -->
+<script type="text/javascript">
+var a=2;
+var b=null;
+<?php $a=2;while($a<=ceil($Maximo['total']/$Maximo['rows'])){?>
+$(".p<?php echo $a;?>").hide();<?php $a++;}?>
+$("img#next").live("click",function(){ 	if(a>1)b=a-1;if(b>=1 && a<=<?php echo ceil($Maximo['total']/$Maximo['rows']);?>) {
+	$('.p'+b).hide();
+	$('.p'+a).show();
+	
+		$("span#page").html(a);
+	if(a<<?php echo ceil($Maximo['total']/$Maximo['rows']);?>)
+	a++;
+	
+	}});
+	
+	$("img#ant").live("click",function(){ 	if(a>1)b=a-1;if(a>1) {
+	$('.p'+b).show();
+	
+		$("span#page").html(b);
+	$('.p'+a).hide();
+	if(a>2)
+	a--;
+	}});
+	
+	$("#btnEditar").live("click",function(){		
+		
+		$("input#rfc").val($(this).attr("rfc"));
+		
+		$("input#nombre").val($(this).attr("nombre"));
+		
+		$("input#domicilio").val($(this).attr("domicilio"));
+		$("input#id").val($(this).attr("idproveedor"));
+		$("input#action").val("editar");
+		
+		
+		$("input#telefono").val($(this).attr("telefono"));
+		$("select#fondo option[value='"+$(this).attr("fondo")+"']").attr("selected","selected");
+		$("input#email").val($(this).attr("email"));
+		
+		$("ul.tabs li").removeClass("active");
+		$("ul.tabs").append('<li class="active"><a href="javascript:;">Editar</a></li>');
+		$(".tab_content").hide();
+		$("#agregar").fadeIn();
+	});
+</script>
