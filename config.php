@@ -1,11 +1,11 @@
 <?php
 
-define('BASE_URL', 'http://localhost:8080/');
+define('BASE_URL', 'https://facturasv2.huetamo.com.mx/');
 
-define('DB_HOST', 'mysql-db');
-define('DB_NAME', 'huetamo_facturas');
-define('DB_USER', 'root');
-define('DB_PASS', 'root');
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'huetamoc_contrarecibos');
+define('DB_USER', 'huetamoc_contrarecibos');
+define('DB_PASS', 'aUiMns_CWz;[CIH=');
 define('DB_PORT', 3306);
 
 try {
