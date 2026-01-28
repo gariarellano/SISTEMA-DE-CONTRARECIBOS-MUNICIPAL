@@ -1,6 +1,6 @@
 <?php
 
-define('BASE_URL', 'https://facturasv2.huetamo.com.mx/');
+define('BASE_URL', '');
 
 define('DB_HOST', 'localhost');
 define('DB_NAME', '');
