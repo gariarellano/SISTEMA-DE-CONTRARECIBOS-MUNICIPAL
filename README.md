@@ -45,3 +45,7 @@ La configuración de la conexión a la base de datos se encuentra en `config.php
 ## Base de Datos
 
 El archivo `huetamoc_backup.sql` en la raíz contiene un respaldo inicial o estructura de la base de datos que puede ser importado si es necesario.
+
+## Créditos
+
+Desarrollado por **HAYDEE BARRERA SANTACRUZ**, alumna de **INGENIERÍA EN SISTEMAS COMPUTACIONALES** en el **TECNOLOGICO SUPERIOR DE HUETAMO**.
